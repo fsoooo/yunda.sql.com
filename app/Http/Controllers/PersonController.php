@@ -24,7 +24,7 @@ class PersonController
     public function index()
     {
     	if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
-			$person = Person::limit(100)->get();
+			$person = Person::limit(10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
@@ -39,7 +39,7 @@ class PersonController
 		}
 		$count =  Redis::lLen('person_info');
 		if($count<=0){
-			$person = Person::limit($max_id,100)->get();
+			$person = Person::limit($max_id+1,10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
@@ -52,7 +52,7 @@ class PersonController
 				Redis::rpush('person_info',json_encode($value));
 			}
 		}
-		for($i=1;$i<=10;$i++){
+		for($i=1;$i<=100;$i++){
 			$person_info = Redis::rpop('person_info');
 			$this->addData(json_decode($person_info,true));
 		}
@@ -86,7 +86,7 @@ class PersonController
 			DB::beginTransaction();
 			try{
 				$person_id = OnlinePerson::insertGetId($insert_data);
-				$account_uuid = 15463303497682966+$data['id'];
+				$account_uuid = 154000000+$data['id'];
 				if($person_id>0){
 					$insert_data_account = [];
 					$insert_data_account['account_uuid'] =$account_uuid.'';
@@ -120,24 +120,24 @@ class PersonController
 								$add = OnlinePersonRefer::insertGetId($insert_data_personrefer);
 								if($add>0){
 									DB::commit();
-									return false;
+									return '成功';
 								}else{
 									DB::rollBack();
-									throw new \Exception("person_refer_id < 0");
+									return '失败';
 								}
 							}
 						}else{
 							DB::rollBack();
-							throw new \Exception("account_id < 0");
+							return '失败';
 						}
 					}
 				}else{
 					DB::rollBack();
-					throw new \Exception("person_id < 0");
+					return '失败';
 				}
 			}catch (\Exception $e){
 				DB::rollBack();
-				return false;
+				return '失败';
 			}
 		}
 	}
