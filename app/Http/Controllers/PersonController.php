@@ -32,9 +32,14 @@ class PersonController
 			$person = Redis::get('person_data');
 			$max_id = Redis::get('person_max_id');
 		}
-		if(!Redis::exists('person_info')&&Redis::lLen('person_info')==0){
-			foreach ($person as $value){
-				Redis::rpush('person_info',json_encode($value));
+		if(!is_array($person)){
+			$person = json_decode($person,true);
+		}
+		if(!Redis::exists('person_info')||Redis::lLen('person_info')==0){
+    		if(!empty($person)){
+				foreach ($person as $value){
+					Redis::rpush('person_info',json_encode($value));
+				}
 			}
 		}
 		$count =  Redis::lLen('person_info');
@@ -43,9 +48,6 @@ class PersonController
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
-		}
-		if(!is_array($person)){
-			$person = json_decode($person,true);
 		}
 		if(!empty($person)&&$count==0){
 			foreach ($person as $value){
