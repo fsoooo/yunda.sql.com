@@ -24,6 +24,9 @@ class WarranytyController
 
     public function index()
     {
+		$warranty = CustWarranty::get();//user_id  user_type获取person_data(account_id,account_id)
+		$warranty_person = CustWarrantyPerson::get();
+
 		if(!Redis::exists('max_id')&&!Redis::exists('person_data')){
 			$person = Person::limit(100)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
@@ -58,9 +61,6 @@ class WarranytyController
 			$this->addData(json_decode($person_info,true));
 		}
 		echo $count;
-    	$warranty = CustWarranty::get();//user_id  user_type获取person_data(account_id,account_id)
-    	$warranty_person = CustWarrantyPerson::get();
-
     }
 
     public function doAdd(){

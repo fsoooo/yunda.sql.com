@@ -12,4 +12,6 @@
 */
 
 Route::get('/', 'IndexController@index');
-Route::get('/do', 'IndexController@doAdd');
+Route::get('/person', 'PersonController@index');
+Route::get('/warranty', 'WarrantyController@index');
+Route::get('/bank', 'BankController@index');

@@ -2,16 +2,16 @@
 
 namespace App\Api\Controllers;
 
-use App\Http\Controllers\IndexController;
+use App\Http\Controllers\PersonController;
 use Dingo\Api\Routing\Helpers;
 
 
-class BaseIndexController extends IndexController
+class BasePersonController extends PersonController
 {
     use Helpers;
 
     /****
-     * BaseIndexController constructor.
+     * BasePersonController constructor.
      */
     public function __construct()
     {
