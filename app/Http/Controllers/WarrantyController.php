@@ -230,4 +230,5 @@ class WarrantyController
 			OnlineCustWarrantyPerson::insertGetId($insert_warranty_person);
 		}
 	}
+
 }
