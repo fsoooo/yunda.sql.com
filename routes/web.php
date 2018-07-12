@@ -15,4 +15,5 @@ Route::get('/', 'IndexController@index');
 Route::get('/person', 'PersonController@index');
 Route::get('/warranty', 'WarrantyController@warrantyIndex');
 Route::get('/warranty_person', 'WarrantyController@warrantyPersonIndex');
-Route::get('/bank', 'BankController@index');
+Route::get('/bank', 'BankController@bankIndex');
+Route::get('/bank_authorize', 'BankController@bankAuthorizeIndex');
