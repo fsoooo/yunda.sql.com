@@ -23,14 +23,14 @@ class PersonController
 
     public function index()
     {
-    	if(!Redis::exists('max_id')&&!Redis::exists('person_data')){
+    	if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
 			$person = Person::limit(100)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
-			Redis::set('max_id',$max_id);
+			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
 		}else{
 			$person = Redis::get('person_data');
-			$max_id = Redis::get('max_id');
+			$max_id = Redis::get('person_max_id');
 		}
 		if(!Redis::exists('person_info')&&Redis::lLen('person_info')==0){
 			foreach ($person as $value){
@@ -41,7 +41,7 @@ class PersonController
 		if($count<=0){
 			$person = Person::limit($max_id,100)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
-			Redis::set('max_id',$max_id);
+			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
 		}
 		if(!is_array($person)){

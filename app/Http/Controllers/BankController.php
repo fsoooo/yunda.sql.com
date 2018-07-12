@@ -7,7 +7,7 @@ use App\Models\OnlinePerson;
 use App\Models\Person;
 use App\Models\OnlineAccount;
 use Illuminate\Support\Facades\Redis;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class BankController
 {
