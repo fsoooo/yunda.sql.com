@@ -131,7 +131,7 @@ class BankController
 		set_time_limit(0);
 		$contract_common = ContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
 		if (!Redis::exists('contract_max_id') && !Redis::exists('contract_data')) {
-			$contract_data = $contract_common->limit(1000)->get();
+			$contract_data = $contract_common->limit(1)->get();
 			if(!empty($contract_data)){
 				$max_id = $contract_data[count($contract_data)-1]['id'];//把最大的id存在redis里
 				Redis::set('contract_max_id', $max_id);
@@ -157,14 +157,14 @@ class BankController
 				Redis::rpush('contract_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 100; $i++) {
+		for ($i = 1; $i <= 1; $i++) {
 			$contract_info = Redis::rpop('contract_info');
 			$add_res = $this->doAddBankAuthorize(json_decode($contract_info, true));
 			dump($add_res);
 		}
 		$count = Redis::lLen('contract_info');
 		if ($count <= 0) {
-			$contract_data = $contract_common->limit($max_id+1,1000)->get();
+			$contract_data = $contract_common->limit($max_id+1,1)->get();
 			$max_id = $contract_data[count($contract_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('contract_max_id', $max_id);
 			Redis::set('contract_data', $contract_data);
@@ -190,8 +190,9 @@ class BankController
 		$authorize_data['created_at'] = $this->date;
 		$authorize_data['updated_at'] = $this->date;
 		if(!$authorize_data['account_uuid']||$authorize_data['account_uuid']=='0'||empty($authorize_data['account_uuid'])){
-			return 'no account_uuid';
+			//return 'no account_uuid';
 		}
+		$authorize_data['account_uuid'] = '15400013912';
 		$repeat_res = OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
 			->select('id')
 			->first();
@@ -199,18 +200,27 @@ class BankController
 			OnlineBankAuthorize::insertGetId($authorize_data);
 			return '插入结果';
 		}else{
-			//TODO 更新操作有问题
-			 OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
-				->update(
-					[
-					'request_serial' =>  $contract_info['request_serial'],
-					'contract_expired_time' =>  $contract_info['contract_expired_time'],
-					'contract_id' =>  $contract_info['contract_id'],
-					'change_type' =>  $contract_info['change_type'],
-					'contract_code' =>  $contract_info['contract_code'],
-					'openid' =>  $contract_info['openid'],
-					'updated_at' =>  $this->date
-				]);
+			DB::connection('online_mysql')->update('update 
+							`bank_authorize` 
+						set 
+							`request_serial` = '.'"'.$authorize_data['request_serial'].'"'.' 
+						and `contract_expired_time`= '.'"'.$authorize_data['contract_expired_time'].'"'.' 
+						and `contract_id`= '.'"'.$authorize_data['contract_id'].'"'.' 
+						and `change_type`= '.'"'.$authorize_data['change_type'].'"'.' 
+						and `contract_code`= '.'"'.$authorize_data['contract_code'].'"'.' 
+						and `openid`= '.'"'.$authorize_data['openid'].'"'.' 
+						and `updated_at`='.'"'.$this->date.'"'.' 
+					  where `account_uuid` = '.'"'.$authorize_data['account_uuid'].'"');
+//			 OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
+//				->update(
+//					[
+//					'request_serial' => $authorize_data['request_serial'],
+//					'contract_expired_time' => $authorize_data['contract_expired_time'],
+//					'contract_id' => $authorize_data['contract_id'],
+//					'change_type' => $authorize_data['change_type'],
+//					'contract_code' => $authorize_data['contract_code'],
+//					'openid' => $authorize_data['openid']
+//				]);
 			return '更新结果';
 		}
 	}
