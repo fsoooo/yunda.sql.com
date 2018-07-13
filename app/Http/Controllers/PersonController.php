@@ -23,10 +23,10 @@ class PersonController
 
     public function index()
     {
-    	$person_common = Person::select(
-			'id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status');
+		set_time_limit(0);
+    	$person_common = Person::select('id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status');
     	if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
-			$person = $person_common->limit(10)->get();
+			$person = $person_common->limit(100)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
@@ -44,23 +44,24 @@ class PersonController
 				}
 			}
 		}
-		$count =  Redis::lLen('person_info');
-		if($count<=0){
-			$person =  $person_common->limit($max_id+1,1000)->get();
-			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
-			Redis::set('person_max_id',$max_id);
-			Redis::set('person_data',$person);
-		}
-		if(!empty($person)&&$count==0){
+		if(!empty($person)&&Redis::lLen('person_info')==0){
 			foreach ($person as $value){
 				Redis::rpush('person_info',json_encode($value));
 			}
 		}
-		for($i=1;$i<=10;$i++){
+		for($i=1;$i<=100;$i++){
 			$person_info = Redis::rpop('person_info');
-			$this->addData(json_decode($person_info,true));
+			$addRes = $this->addData(json_decode($person_info,true));
+			echo $addRes;
 		}
-		echo $count;
+		if(Redis::lLen('person_info')<1){
+			$person =  $person_common->limit($max_id+1,100)->get();
+			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
+			Redis::set('person_max_id',$max_id);
+			Redis::set('person_data',$person);
+		}
+		echo 'max_id_'.$max_id.'<br/>';
+		echo 'person_info_count_'.Redis::lLen('person_info');
     }
 
 	public function addData($data){
@@ -129,11 +130,15 @@ class PersonController
 									DB::rollBack();
 									return '失败';
 								}
+							}else{
+								return 'person_refer not empty';
 							}
 						}else{
 							DB::rollBack();
 							return '失败';
 						}
+					}else{
+						return 'account not empty';
 					}
 				}else{
 					DB::rollBack();
@@ -143,6 +148,8 @@ class PersonController
 				DB::rollBack();
 				return '失败';
 			}
+		}else{
+			return 'person not empty';
 		}
 	}
 

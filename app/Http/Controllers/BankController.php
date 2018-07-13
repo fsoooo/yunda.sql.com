@@ -23,6 +23,7 @@ class BankController
 	}
 
 	public function bankIndex(){
+		set_time_limit(0);
 		$bank_common = Bank::select('id','cust_id','bank','bank_code','bank_city','phone');
 		if (!Redis::exists('bank_max_id') && !Redis::exists('bank_data')) {
 			$bank_data = $bank_common->limit(1000)->get();
@@ -48,12 +49,6 @@ class BankController
 			}
 		}
 		$count = Redis::lLen('bank_info');
-		if ($count <= 0) {
-			$bank_data = $bank_common->limit($max_id+1,1000)->get();
-			$max_id = $bank_data[count($bank_data) - 1]['id'];//把最大的id存在redis里
-			Redis::set('bank_max_id', $max_id);
-			Redis::set('bank_data', $bank_data);
-		}
 		if (!empty($bank_data) && $count == 0) {
 			foreach ($bank_data as $value) {
 				$person_data = OnlinePersonRefer::where('out_person_id', $value['cust_id'])
@@ -68,7 +63,15 @@ class BankController
 		}
 		for ($i = 1; $i <= 100; $i++) {
 			$bank_info = Redis::rpop('bank_info');
-			$this->doAddBank(json_decode($bank_info, true));
+			$add_res = $this->doAddBank(json_decode($bank_info, true));
+			echo $add_res;
+		}
+		$count = Redis::lLen('bank_info');
+		if ($count <= 0) {
+			$bank_data = $bank_common->limit($max_id+1,1000)->get();
+			$max_id = $bank_data[count($bank_data) - 1]['id'];//把最大的id存在redis里
+			Redis::set('bank_max_id', $max_id);
+			Redis::set('bank_data', $bank_data);
 		}
 		echo $count;
 	}
@@ -89,7 +92,6 @@ class BankController
 			->select('id')
 			->first();
 		if(empty($repeat_res)){
-
 			DB::beginTransaction();
 			try {
 				$bank_id = OnlineBank::insertGetId($bank_data);
@@ -110,22 +112,27 @@ class BankController
 					->select('id')->first();
 				if(empty($repeat_res)){
 					$bank_authorize_id = OnlineBankAuthorize::insertGetId($authorize_data);
+				}else{
+					return 'bank_authorize not empty';
 				}
 				if ($bank_id && $bank_authorize_id) {
 					DB::commit();
-					return false;
+					return '成功';
 				} else {
 					DB::rollBack();
-					return false;
+					return '失败';
 				}
 			} catch (\Exception $e) {
 				DB::rollBack();
-				return false;
+				return '失败';
 			}
+		}else{
+			return 'bank not empty';
 		}
 	}
 
 	public function bankAuthorizeIndex(){
+		set_time_limit(0);
 		$contract_common = ContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
 		if (!Redis::exists('contract_max_id') && !Redis::exists('contract_data')) {
 			$contract_data = $contract_common->limit(1000)->get();
@@ -151,12 +158,6 @@ class BankController
 			}
 		}
 		$count = Redis::lLen('contract_info');
-		if ($count <= 0) {
-			$contract_data = $contract_common->limit($max_id+1,1000)->get();
-			$max_id = $contract_data[count($contract_data) - 1]['id'];//把最大的id存在redis里
-			Redis::set('contract_max_id', $max_id);
-			Redis::set('contract_data', $contract_data);
-		}
 		if (!empty($contract_data) && $count == 0) {
 			foreach ($contract_data as $value) {
 				$person_data = OnlinePerson::where('cert_code', $value['channel_user_code'])
@@ -171,7 +172,15 @@ class BankController
 		}
 		for ($i = 1; $i <= 100; $i++) {
 			$contract_info = Redis::rpop('contract_info');
-			$this->doAddBankAuthorize(json_decode($contract_info, true));
+			$add_res = $this->doAddBankAuthorize(json_decode($contract_info, true));
+			echo $add_res;
+		}
+		$count = Redis::lLen('contract_info');
+		if ($count <= 0) {
+			$contract_data = $contract_common->limit($max_id+1,1000)->get();
+			$max_id = $contract_data[count($contract_data) - 1]['id'];//把最大的id存在redis里
+			Redis::set('contract_max_id', $max_id);
+			Redis::set('contract_data', $contract_data);
 		}
 		echo $count;
 	}
