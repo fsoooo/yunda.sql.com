@@ -51,7 +51,7 @@ class WarrantyController
 		}
 		$count = Redis::lLen('warranty_info');
 		if ($count <= 0) {
-			$warranty = $warranty_common->limit($max_id,100)->get();
+			$warranty = $warranty_common->limit($max_id+1,100)->get();
 			$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_max_id', $max_id);
 			Redis::set('warranty_data', $warranty);
@@ -158,8 +158,9 @@ class WarrantyController
 
 	public function warrantyPersonIndex()
 	{
+		$warranty_person_commom = CustWarrantyPerson::select('id','warranty_uuid','out_order_no','type', 'relation_name', 'name', 'card_type', 'card_code', 'phone', 'occupation', 'birthday','sex', 'age','email', 'nationality', 'annual_income', 'height', 'weight', 'area', 'address', 'start_time', 'end_time');
 		if (!Redis::exists('warranty_person_max_id') && !Redis::exists('warranty_person_data')) {
-			$warranty_person_data = CustWarrantyPerson::limit(20)->get();
+			$warranty_person_data = $warranty_person_commom->limit(20)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);
@@ -179,7 +180,7 @@ class WarrantyController
 		}
 		$count = Redis::lLen('warranty_person_info');
 		if ($count <= 0) {
-			$warranty_person_data = CustWarranty::limit($warranty_person_max_id, 20)->get();
+			$warranty_person_data = $warranty_person_commom->limit($warranty_person_max_id+1, 20)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);

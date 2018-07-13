@@ -23,7 +23,7 @@ class BankController
 	}
 
 	public function bankIndex(){
-		$bank_common = Bank::select('cust_id','bank','bank_code','bank_city','phone');
+		$bank_common = Bank::select('id','cust_id','bank','bank_code','bank_city','phone');
 		if (!Redis::exists('bank_max_id') && !Redis::exists('bank_data')) {
 			$bank_data = $bank_common->limit(1000)->get();
 			if(!empty($bank_data)){
@@ -49,7 +49,7 @@ class BankController
 		}
 		$count = Redis::lLen('bank_info');
 		if ($count <= 0) {
-			$bank_data = $bank_common->limit($max_id,1000)->get();
+			$bank_data = $bank_common->limit($max_id+1,1000)->get();
 			$max_id = $bank_data[count($bank_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('bank_max_id', $max_id);
 			Redis::set('bank_data', $bank_data);
@@ -126,11 +126,11 @@ class BankController
 	}
 
 	public function bankAuthorizeIndex(){
-		$contract_common = ContractInfo::select('request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
+		$contract_common = ContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
 		if (!Redis::exists('contract_max_id') && !Redis::exists('contract_data')) {
 			$contract_data = $contract_common->limit(1000)->get();
 			if(!empty($contract_data)){
-				$max_id = $contract_data[count($contract_data) - 1]['id'];//把最大的id存在redis里
+				$max_id = $contract_data[count($contract_data)-1]['id'];//把最大的id存在redis里
 				Redis::set('contract_max_id', $max_id);
 				Redis::set('contract_data', json_encode($contract_data));
 			}else{
@@ -152,7 +152,7 @@ class BankController
 		}
 		$count = Redis::lLen('contract_info');
 		if ($count <= 0) {
-			$contract_data = $contract_common->limit($max_id,1000)->get();
+			$contract_data = $contract_common->limit($max_id+1,1000)->get();
 			$max_id = $contract_data[count($contract_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('contract_max_id', $max_id);
 			Redis::set('contract_data', $contract_data);
