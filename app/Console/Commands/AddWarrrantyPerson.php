@@ -14,6 +14,7 @@ use App\Models\OldCustWarranty;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Console\Command;
+use Illuminate\Http\Request;
 
 class AddWarrrantyPerson extends Command
 {
