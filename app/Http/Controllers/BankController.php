@@ -174,19 +174,11 @@ class BankController
 
 	public function doAddBankAuthorize($contract_info){
 		$person_data = OnlinePerson::where('cert_code', $contract_info['channel_user_code'])
+			->with('personRefer')
 			->select('id')
 			->first();
-		$person_refer_data = [];
-		if(!empty($person_data)){
-			$person_refer_data = OnlinePersonRefer::where('person_id',$person_data['id'])
-				->select('account_uuid')
-				->first();
-			if(empty($person_refer_data)){
-				return '没有找到account_uuid';
-			}
-		}
 		$authorize_data = [];
-		$authorize_data['account_uuid'] = $person_refer_data['account_uuid']??"0";
+		$authorize_data['account_uuid'] = $person_data['personRefer']['account_uuid']??"0";
 		$authorize_data['bank_id'] = '';
 		$authorize_data['request_serial'] =  $contract_info['request_serial'];
 		$authorize_data['contract_expired_time'] =  $contract_info['contract_expired_time'];
@@ -197,18 +189,20 @@ class BankController
 		$authorize_data['state'] = '1';
 		$authorize_data['created_at'] = $this->date;
 		$authorize_data['updated_at'] = $this->date;
-		if(!$authorize_data['account_uuid']){
+		if(!$authorize_data['account_uuid']||$authorize_data['account_uuid']=='0'||empty($authorize_data['account_uuid'])){
 			return 'no account_uuid';
 		}
 		$repeat_res = OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
 			->select('id')
 			->first();
 		if(empty($repeat_res)){
-			$add_bank_authorize = OnlineBankAuthorize::insertGetId($authorize_data);
-			return '插入结果:'.$add_bank_authorize;
+			OnlineBankAuthorize::insertGetId($authorize_data);
+			return '插入结果';
 		}else{
-			$add_bank_authorize = OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
-				->update([
+			//TODO 更新操作有问题
+			 OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
+				->update(
+					[
 					'request_serial' =>  $contract_info['request_serial'],
 					'contract_expired_time' =>  $contract_info['contract_expired_time'],
 					'contract_id' =>  $contract_info['contract_id'],
@@ -217,7 +211,7 @@ class BankController
 					'openid' =>  $contract_info['openid'],
 					'updated_at' =>  $this->date
 				]);
-			return '更新结果:'.$add_bank_authorize;
+			return '更新结果';
 		}
 	}
 

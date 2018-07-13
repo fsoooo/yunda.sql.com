@@ -9,13 +9,6 @@ namespace App\Helper;
 class TimeStamp
 {
     /**
-     * constructer.
-     */
-    public function __construct()
-    {
-    }
-
-    /**
      * 获取毫秒值
      *
      * @return float
