@@ -51,20 +51,13 @@ class BankController
 		$count = Redis::lLen('bank_info');
 		if (!empty($bank_data) && $count == 0) {
 			foreach ($bank_data as $value) {
-				$person_data = OnlinePersonRefer::where('out_person_id', $value['cust_id'])
-					->select('account_uuid', 'manager_uuid')
-					->first();
-				if (!empty($person_data)) {
-					$value['account_uuid'] = $person_data['account_uuid'];
-					$value['manager_uuid'] = $person_data['manager_uuid'];
-				}
 				Redis::rpush('bank_info', json_encode($value));
 			}
 		}
 		for ($i = 1; $i <= 100; $i++) {
 			$bank_info = Redis::rpop('bank_info');
 			$add_res = $this->doAddBank(json_decode($bank_info, true));
-			echo $add_res;
+			dump($add_res);
 		}
 		$count = Redis::lLen('bank_info');
 		if ($count <= 0) {
@@ -77,8 +70,11 @@ class BankController
 	}
 
 	public function doAddBank($bank_info){
+		$person_data = OnlinePersonRefer::where('out_person_id', $bank_info['cust_id'])
+			->select('account_uuid', 'manager_uuid')
+			->first();
 		$bank_data = [];
-		$bank_data['account_uuid'] = $bank_info['account_uuid']??"";
+		$bank_data['account_uuid'] = $person_data['account_uuid']??"0";
 		$bank_data['bank_name'] = $bank_info['bank'];
 		$bank_data['bank_city'] = $bank_info['bank_city'];
 		$bank_data['bank_code'] = $bank_info['bank_code'];
@@ -96,7 +92,7 @@ class BankController
 			try {
 				$bank_id = OnlineBank::insertGetId($bank_data);
 				$authorize_data = [];
-				$authorize_data['account_uuid'] = $bank_info['account_uuid'];
+				$authorize_data['account_uuid'] = $person_data['account_uuid']??"0";
 				$authorize_data['bank_id'] = $bank_id;
 				$authorize_data['request_serial'] = '';
 				$authorize_data['contract_expired_time'] = '';
@@ -120,11 +116,11 @@ class BankController
 					return '成功';
 				} else {
 					DB::rollBack();
-					return '失败';
+					return '数据插入失败';
 				}
 			} catch (\Exception $e) {
 				DB::rollBack();
-				return '失败';
+				return 'sql执行失败';
 			}
 		}else{
 			return 'bank not empty';
@@ -140,8 +136,6 @@ class BankController
 				$max_id = $contract_data[count($contract_data)-1]['id'];//把最大的id存在redis里
 				Redis::set('contract_max_id', $max_id);
 				Redis::set('contract_data', json_encode($contract_data));
-			}else{
-				return 1;
 			}
 		} else {
 			$contract_data = Redis::get('contract_data');
@@ -160,20 +154,13 @@ class BankController
 		$count = Redis::lLen('contract_info');
 		if (!empty($contract_data) && $count == 0) {
 			foreach ($contract_data as $value) {
-				$person_data = OnlinePerson::where('cert_code', $value['channel_user_code'])
-					->select('account_uuid', 'manager_uuid')
-					->first();
-				if (!empty($person_data)) {
-					$value['account_uuid'] = $person_data['account_uuid'];
-					$value['manager_uuid'] = $person_data['manager_uuid'];
-				}
 				Redis::rpush('contract_info', json_encode($value));
 			}
 		}
 		for ($i = 1; $i <= 100; $i++) {
 			$contract_info = Redis::rpop('contract_info');
 			$add_res = $this->doAddBankAuthorize(json_decode($contract_info, true));
-			echo $add_res;
+			dump($add_res);
 		}
 		$count = Redis::lLen('contract_info');
 		if ($count <= 0) {
@@ -186,8 +173,20 @@ class BankController
 	}
 
 	public function doAddBankAuthorize($contract_info){
+		$person_data = OnlinePerson::where('cert_code', $contract_info['channel_user_code'])
+			->select('id')
+			->first();
+		$person_refer_data = [];
+		if(!empty($person_data)){
+			$person_refer_data = OnlinePersonRefer::where('person_id',$person_data['id'])
+				->select('account_uuid')
+				->first();
+			if(empty($person_refer_data)){
+				return '没有找到account_uuid';
+			}
+		}
 		$authorize_data = [];
-		$authorize_data['account_uuid'] = $contract_info['account_uuid']??"";
+		$authorize_data['account_uuid'] = $person_refer_data['account_uuid']??"0";
 		$authorize_data['bank_id'] = '';
 		$authorize_data['request_serial'] =  $contract_info['request_serial'];
 		$authorize_data['contract_expired_time'] =  $contract_info['contract_expired_time'];
@@ -198,10 +197,15 @@ class BankController
 		$authorize_data['state'] = '1';
 		$authorize_data['created_at'] = $this->date;
 		$authorize_data['updated_at'] = $this->date;
+		if(!$authorize_data['account_uuid']){
+			return 'no account_uuid';
+		}
 		$repeat_res = OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
-			->select('id')->first();
+			->select('id')
+			->first();
 		if(empty($repeat_res)){
 			$add_bank_authorize = OnlineBankAuthorize::insertGetId($authorize_data);
+			return '插入结果:'.$add_bank_authorize;
 		}else{
 			$add_bank_authorize = OnlineBankAuthorize::where('account_uuid',$authorize_data['account_uuid'])
 				->update([
@@ -213,6 +217,7 @@ class BankController
 					'openid' =>  $contract_info['openid'],
 					'updated_at' =>  $this->date
 				]);
+			return '更新结果:'.$add_bank_authorize;
 		}
 	}
 

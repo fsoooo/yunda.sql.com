@@ -28,7 +28,7 @@ class WarrantyController
 		set_time_limit(0);
 		$warranty_common = CustWarranty::select('id','warranty_uuid','pro_policy_no','warranty_code','business_no','comb_product','comb_warranty_code','company_id','user_id','user_type','agent_id','ditch_id','plan_id','product_id','start_time','end_time','ins_company_id','count','pay_time','pay_count','pay_way','by_stages_way','is_settlement','warranty_url','warranty_from','type','check_status','pay_status','warranty_status','resp_insure_msg','resp_pay_msg','state');
 		if (!Redis::exists('warranty_max_id') && !Redis::exists('warranty_data')) {
-			$warranty = $warranty_common->limit(100)->get();
+			$warranty = $warranty_common->limit(1000)->get();
 			if(!empty($warranty)){
 				$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 				Redis::set('warranty_max_id', $max_id);
@@ -50,8 +50,7 @@ class WarrantyController
 				}
 			}
 		}
-		$count = Redis::lLen('warranty_info');
-		if (!empty($warranty) && $count == 0) {
+		if (!empty($warranty) && Redis::lLen('warranty_info') == 0) {
 			foreach ($warranty as $value) {
 				$person_data = OnlinePersonRefer::where('out_person_id', $value['user_id'])
 					->select('account_uuid', 'manager_uuid')
@@ -63,20 +62,19 @@ class WarrantyController
 				Redis::rpush('warranty_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 10; $i++) {
+		for ($i = 1; $i <= 100; $i++) {
 			$warranty_info = Redis::rpop('warranty_info');
 			$add_res = $this->addWarranty(json_decode($warranty_info, true));
-			echo $add_res;
+			dump($add_res);
 		}
-		$count = Redis::lLen('warranty_info');
-		if ($count <= 0) {
+		if (Redis::lLen('warranty_info') <= 0) {
 			$warranty = $warranty_common->limit($max_id+1,100)->get();
 			$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_max_id', $max_id);
 			Redis::set('warranty_data', $warranty);
 		}
 		echo 'max_id_'.$max_id;
-		echo 'warranty_info_'.$warranty;
+		echo 'warranty_info_Count'.Redis::lLen('warranty_info');
 	}
 
 	public function addWarranty($warranty_data)
@@ -151,11 +149,11 @@ class WarrantyController
 					return '成功';
 				} else {
 					DB::rollBack();
-					return '失败';
+					return '数据插入失败';
 				}
 			} catch (\Exception $e) {
 				DB::rollBack();
-				return '失败';
+				return 'sql执行失败';
 			}
 		}else{
 			return 'warranty not empty';
@@ -167,7 +165,7 @@ class WarrantyController
 		set_time_limit(0);
 		$warranty_person_commom = CustWarrantyPerson::select('id','warranty_uuid','out_order_no','type', 'relation_name', 'name', 'card_type', 'card_code', 'phone', 'occupation', 'birthday','sex', 'age','email', 'nationality', 'annual_income', 'height', 'weight', 'area', 'address', 'start_time', 'end_time');
 		if (!Redis::exists('warranty_person_max_id') && !Redis::exists('warranty_person_data')) {
-			$warranty_person_data = $warranty_person_commom->limit(20)->get();
+			$warranty_person_data = $warranty_person_commom->limit(1000)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);
@@ -191,10 +189,10 @@ class WarrantyController
 				Redis::rpush('warranty_person_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 10; $i++) {
+		for ($i = 1; $i <= 100; $i++) {
 			$warranty_person_info = Redis::rpop('warranty_person_info');
 			$add_res = $this->addWarrantyPerson(json_decode($warranty_person_info, true));
-			echo $add_res;
+			dump($add_res);
 		}
 		$count = Redis::lLen('warranty_person_info');
 		if ($count <= 0) {
@@ -209,8 +207,8 @@ class WarrantyController
 	public function addWarrantyPerson($warranty_person_data)
 	{
 		$insert_warranty_person = [];
-		$insert_warranty_person['warranty_uuid'] = $warranty_person_data['warranty_uuid'];//不为空
-		$insert_warranty_person['type'] = $warranty_person_data['type'];//人员类型: 1投保人 2被保人 3受益人
+		$insert_warranty_person['warranty_uuid'] = $warranty_person_data['warranty_uuid']??'0';//不为空
+		$insert_warranty_person['type'] = $warranty_person_data['type']??"1";//人员类型: 1投保人 2被保人 3受益人
 		$insert_warranty_person['relation_name'] = $warranty_person_data['relation_name'];
 		$insert_warranty_person['out_order_no'] = $warranty_person_data['out_order_no'];
 		$insert_warranty_person['name'] = $warranty_person_data['name'];
@@ -232,12 +230,13 @@ class WarrantyController
 		$insert_warranty_person['end_time'] = $data['end_time'] ?? "0";
 		$insert_warranty_person['record_start_time'] = '0';
 		$insert_warranty_person['record_end_time'] = '0';
-		$repeat_res = OnlineCustWarrantyPerson::where('warranty_uuid', $warranty_person_data['warranty_uuid'])
-			->where('type',$warranty_person_data['type'])
+		$repeat_res = OnlineCustWarrantyPerson::where('warranty_uuid', $insert_warranty_person['warranty_uuid'])
+			->where('type',$insert_warranty_person['type'])
 			->select('id')
 			->first();
 		if (empty($repeat_res)) {
 			OnlineCustWarrantyPerson::insertGetId($insert_warranty_person);
+			return '成功';
 		}else{
 			return 'warranty_person not empty';
 		}
