@@ -51,7 +51,7 @@ class AddBankAuthorize extends Command
 		set_time_limit(0);
 		$contract_common = OldContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
 		if (!Redis::exists('contract_max_id') && !Redis::exists('contract_data')) {
-			$contract_data = $contract_common->limit(1)->get();
+			$contract_data = $contract_common->limit(1000)->get();
 			if(!empty($contract_data)){
 				$max_id = $contract_data[count($contract_data)-1]['id'];//把最大的id存在redis里
 				Redis::set('contract_max_id', $max_id);
@@ -77,7 +77,7 @@ class AddBankAuthorize extends Command
 				Redis::rpush('contract_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 1; $i++) {
+		for ($i = 1; $i <= 200; $i++) {
 			$contract_info = Redis::rpop('contract_info');
 			$add_res = $this->doAddBankAuthorize(json_decode($contract_info, true));
 			dump($add_res);

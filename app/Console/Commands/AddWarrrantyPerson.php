@@ -50,7 +50,7 @@ class AddWarrrantyPerson extends Command
 		set_time_limit(0);
 		$warranty_person_commom = OldCustWarrantyPerson::select('id','warranty_uuid','out_order_no','type', 'relation_name', 'name', 'card_type', 'card_code', 'phone', 'occupation', 'birthday','sex', 'age','email', 'nationality', 'annual_income', 'height', 'weight', 'area', 'address', 'start_time', 'end_time');
 		if (!Redis::exists('warranty_person_max_id') && !Redis::exists('warranty_person_data')) {
-			$warranty_person_data = $warranty_person_commom->limit(1000)->get();
+			$warranty_person_data = $warranty_person_commom->limit(2000)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);
@@ -74,7 +74,7 @@ class AddWarrrantyPerson extends Command
 				Redis::rpush('warranty_person_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 100; $i++) {
+		for ($i = 1; $i <= 200; $i++) {
 			$warranty_person_info = Redis::rpop('warranty_person_info');
 			$add_res = $this->addWarrantyPerson(json_decode($warranty_person_info, true));
 			dump($add_res);

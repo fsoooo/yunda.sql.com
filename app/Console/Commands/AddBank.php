@@ -79,7 +79,7 @@ class AddBank extends Command
 				Redis::rpush('bank_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 100; $i++) {
+		for ($i = 1; $i <= 200; $i++) {
 			$bank_info = Redis::rpop('bank_info');
 			$add_res = $this->doAddBank(json_decode($bank_info, true));
 			dump($add_res);

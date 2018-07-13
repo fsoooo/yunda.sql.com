@@ -68,7 +68,7 @@ class AddPerson extends Command
 				Redis::rpush('person_info',json_encode($value));
 			}
 		}
-		for($i=1;$i<=100;$i++){
+		for($i=1;$i<=200;$i++){
 			$person_info = Redis::rpop('person_info');
 			$addRes = $this->addData(json_decode($person_info,true));
 			dump($addRes);
