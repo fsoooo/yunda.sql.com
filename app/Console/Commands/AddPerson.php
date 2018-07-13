@@ -110,7 +110,7 @@ class AddPerson extends Command
 			DB::beginTransaction();
 			try{
 				$person_id = OnlinePerson::insertGetId($insert_data);
-				$account_uuid = 154000000+$data['id'];
+				$account_uuid = '154000000'.$data['id'];
 				if($person_id>0){
 					$insert_data_account = [];
 					$insert_data_account['account_uuid'] =$account_uuid.'';
