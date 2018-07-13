@@ -13,13 +13,11 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        Commands\YunDaPrepare::class,
-        Commands\Msg::class,
-        Commands\YundaCallback::class,
-        Commands\Test::class,
-        Commands\YunDaPay::class,
-        Commands\YunDaIssue::class,
-        Commands\YunDaPre::class,
+        Commands\AddWarrrantyPerson::class,
+        Commands\AddWarrranty::class,
+        Commands\AddBankAuthorize::class,
+        Commands\AddBank::class,
+        Commands\AddPerson::class
     ];
 
     /**
@@ -30,17 +28,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('yunda_prepare')->everyMinute()->between('00:00', '10:00')->runInBackground();
-        $schedule->command('yunda_pay')->everyMinute()->between('00:00', '23:59')->runInBackground();
-        $schedule->command('yunda_issue')->everyMinute()->between('00:00', '23:59')->runInBackground();
-        $schedule->command('yunda_pre')->everyMinute()->between('00:00', '23:59')->runInBackground();
-        // $schedule->command('yundacallback')->everyMinute()->between('21:30', '23:59');//晚上下班之后
-        //$schedule->command('yunda')->dailyAt('23:59');//指定时间执行
-        //$schedule->command('baidu')->everyMinute();//每分钟
-        //$schedule->command('baidu_work_clear')->everyMinute()->runInBackground(); //并行执行
-        //$schedule->command('reminders:send')->hourly()->between('7:00', '22:00');//在指定时间内每小时执行一次
-        //$schedule->command('reminders:send')->hourly()->unlessBetween('23:00', '4:00');//在指定时间外每小时执行一次
-        //$schedule->command('emails:send')->withoutOverlapping();//避免任务重叠
+        $schedule->command('addWarrrantyPerson')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addWarrranty')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addBankAuthorize')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addBank')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addPerson')->everyMinute()->between('00:00', '23:59')->runInBackground();
+
     }
 
     /**

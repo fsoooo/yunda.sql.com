@@ -3,8 +3,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class JointLogin extends Model{
+class OldContractInfo extends Model{
 	protected $connection = 'mysql';
-    protected $table = 'channel_joint_login';
+    protected $table = 'channel_contract_info';
 
 }

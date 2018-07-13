@@ -3,8 +3,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CustWarranty extends Model{
+class OldSqlRecord extends Model{
 
 	protected $connection = 'mysql';
-    protected $table = 'cust_warranty';
+    protected $table = 'sql_record';
 }

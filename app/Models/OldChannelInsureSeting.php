@@ -3,8 +3,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ClaimYunda extends Model{
+class OldChannelInsureSeting extends Model{
 
 	protected $connection = 'mysql';
-    protected $table = 'claim_yunda';
+    protected $table = 'channel_insure_seting';
 }

@@ -3,7 +3,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Bank extends Model{
+class OldBank extends Model{
 
 	protected $connection = 'mysql';
     protected $table = 'bank';

@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Console\Commands;
 
 use App\Helper\TimeStamp;
 use App\Models\OnlinePersonRefer;
@@ -8,24 +8,42 @@ use App\Models\OldPerson;
 use App\Models\OnlineAccount;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Console\Command;
 
-/**
- *
- */
-class PersonController
+class AddPerson extends Command
 {
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'addPerson';
 
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'person Command description';
 
-	public function __construct()
-	{
-		$this->date = TimeStamp::getMillisecond();
-	}
-
-    public function index()
+    /**
+     * Create a new command instance.
+     * @return void
+     * 初始化
+     *
+     */
+    public function __construct(Request $request)
     {
+        parent::__construct();
+        set_time_limit(0);//永不超时
+		$this->date = TimeStamp::getMillisecond();
+    }
+
+    public function handle()
+	{
 		set_time_limit(0);
-    	$person_common = OldPerson::select('id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status');
-    	if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
+		$person_common = OldPerson::select('id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status');
+		if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
 			$person = $person_common->limit(1000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
@@ -38,7 +56,7 @@ class PersonController
 			$person = json_decode($person,true);
 		}
 		if(!Redis::exists('person_info')||Redis::lLen('person_info')==0){
-    		if(!empty($person)){
+			if(!empty($person)){
 				foreach ($person as $value){
 					Redis::rpush('person_info',json_encode($value));
 				}
@@ -62,7 +80,7 @@ class PersonController
 		}
 		echo 'max_id_'.$max_id.'<br/>';
 		echo 'person_info_count_'.Redis::lLen('person_info');
-    }
+	}
 
 	public function addData($data){
 		$insert_data = [];
@@ -158,6 +176,5 @@ class PersonController
 		$str = substr(md5(time()), 0, 6);
 		return $str;
 	}
-
 
 }
