@@ -28,10 +28,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('addWarrrantyPerson')->everyMinute()->between('00:00', '23:59')->runInBackground();
-        $schedule->command('addWarrranty')->everyMinute()->between('00:00', '23:59')->runInBackground();
-        $schedule->command('addBankAuthorize')->everyMinute()->between('00:00', '23:59')->runInBackground();
-        $schedule->command('addBank')->everyMinute()->between('00:00', '23:59')->runInBackground();
+//        $schedule->command('addWarrrantyPerson')->everyMinute()->between('00:00', '23:59')->runInBackground();
+//        $schedule->command('addWarrranty')->everyMinute()->between('00:00', '23:59')->runInBackground();
+//        $schedule->command('addBankAuthorize')->everyMinute()->between('00:00', '23:59')->runInBackground();
+//        $schedule->command('addBank')->everyMinute()->between('00:00', '23:59')->runInBackground();
         $schedule->command('addPerson')->everyMinute()->between('00:00', '23:59')->runInBackground();
 
     }
