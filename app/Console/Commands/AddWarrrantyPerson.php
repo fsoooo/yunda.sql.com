@@ -49,7 +49,7 @@ class AddWarrrantyPerson extends Command
 	public function handle()
 	{
 		set_time_limit(0);
-		$warranty_person_commom = OldCustWarrantyPerson::select('id','warranty_uuid','out_order_no','type', 'relation_name', 'name', 'card_type', 'card_code', 'phone', 'occupation', 'birthday','sex', 'age','email', 'nationality', 'annual_income', 'height', 'weight', 'area', 'address', 'start_time', 'end_time');
+		$warranty_person_commom = OldCustWarrantyPerson::select('id','warranty_uuid','out_order_no','type', 'relation_name', 'name', 'card_type', 'card_code', 'phone', 'occupation', 'birthday','sex', 'age','email', 'nationality', 'annual_income', 'height', 'weight', 'area', 'address', 'start_time', 'end_time',DB::raw('`created_at` AS `create`'),DB::raw('`updated_at` AS `update`'));
 		if (!Redis::exists('warranty_person_max_id') && !Redis::exists('warranty_person_data')) {
 			$warranty_person_data = $warranty_person_commom->limit(10000)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
@@ -123,8 +123,8 @@ class AddWarrrantyPerson extends Command
 		$insert_warranty_person['address'] = $warranty_person_data['address'];
 		$insert_warranty_person['start_time'] = $data['start_time'] ?? "0";
 		$insert_warranty_person['end_time'] = $data['end_time'] ?? "0";
-		$insert_warranty_person['record_start_time'] = '0';
-		$insert_warranty_person['record_end_time'] = '0';
+		$insert_warranty_person['record_start_time'] = $data['start_time']??'0';
+		$insert_warranty_person['record_end_time'] = '2145888000000';
 		$repeat_res = OnlineCustWarrantyPerson::where('warranty_uuid', $insert_warranty_person['warranty_uuid'])
 			->where('type',$insert_warranty_person['type'])
 			->select('id')

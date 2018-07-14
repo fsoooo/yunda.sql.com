@@ -44,7 +44,7 @@ class AddPerson extends Command
     public function handle()
 	{
 		set_time_limit(0);
-		$person_common = OldPerson::select('id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status');
+		$person_common = OldPerson::select('id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status',DB::raw('`created_at` AS `create`'),DB::raw('`updated_at` AS `update`'));
 		if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
 			$person = $person_common->limit(10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
@@ -111,8 +111,8 @@ class AddPerson extends Command
 		$insert_data['back_key'] = $data['down_url'];
 		$insert_data['handheld_key'] = $data['person_url'];
 		$insert_data['state'] = '1';//0删除
-		$insert_data['created_at'] = $this->date;
-		$insert_data['updated_at'] = $this->date;
+		$insert_data['created_at'] = $data['create'];
+		$insert_data['updated_at'] = $data['update'];
 		$repeat_res = OnlinePerson::where('cert_code',$insert_data['cert_code'])->select('id')->first();
 		if(empty($repeat_res)){
 			DB::beginTransaction();
@@ -134,8 +134,8 @@ class AddPerson extends Command
 					$insert_data_account['salt'] = $this->getSalt();
 					$insert_data_account['state'] = '1';//0删除
 					$insert_data_account['origin'] = 'YUNDA';//0删除
-					$insert_data_account['created_at'] = $this->date;
-					$insert_data_account['updated_at'] = $this->date;
+					$insert_data_account['created_at'] = $data['create'];
+					$insert_data_account['updated_at'] = $data['update'];
 					$repeat_res = OnlineAccount::where('account_uuid',$insert_data_account['account_uuid'])->select('id')->first();
 					if(empty($repeat_res)){
 						$addres = OnlineAccount::insertGetId($insert_data_account);

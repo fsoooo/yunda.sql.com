@@ -50,7 +50,7 @@ class AddBank extends Command
 	public function handle()
 	{
 		set_time_limit(0);
-		$bank_common = OldBank::select('id','cust_id','bank','bank_code','bank_city','phone');
+		$bank_common = OldBank::select('id','cust_id','bank','bank_code','bank_city','phone',DB::raw('`created_at` AS `create`'),DB::raw('`updated_at` AS `update`'));
 		if (!Redis::exists('bank_max_id') && !Redis::exists('bank_data')) {
 			$bank_data = $bank_common->limit(10000)->get();
 			if(!empty($bank_data)){

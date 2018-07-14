@@ -49,7 +49,7 @@ class AddWarrranty extends Command
 	public function handle()
 	{
 		set_time_limit(0);
-		$warranty_common = OldCustWarranty::select('id','warranty_uuid','pro_policy_no','warranty_code','business_no','comb_product','comb_warranty_code','company_id','user_id','user_type','agent_id','ditch_id','plan_id','product_id','start_time','end_time','ins_company_id','count','pay_time','pay_count','pay_way','by_stages_way','is_settlement','warranty_url','warranty_from','type','check_status','pay_status','warranty_status','resp_insure_msg','resp_pay_msg','state');
+		$warranty_common = OldCustWarranty::select('id','warranty_uuid','pro_policy_no','warranty_code','business_no','comb_product','comb_warranty_code','company_id','user_id','user_type','agent_id','ditch_id','plan_id','product_id','start_time','end_time','ins_company_id','count','pay_time','pay_count','pay_way','by_stages_way','is_settlement','warranty_url','warranty_from','type','check_status','pay_status','warranty_status','resp_insure_msg','resp_pay_msg','state',DB::raw('`created_at` AS `create`'),DB::raw('`updated_at` AS `update`'));
 		if (!Redis::exists('warranty_max_id') && !Redis::exists('warranty_data')) {
 			$warranty = $warranty_common->limit(10000)->get();
 			if(!empty($warranty)){
@@ -120,12 +120,12 @@ class AddWarrranty extends Command
 		$insert_warranty['agent_id'] = $warranty_data['agent_id'] ?? '';
 		$insert_warranty['channel_id'] = $warranty_data['ditch_id'] ?? '0';
 		$insert_warranty['plan_id'] = $warranty_data['plan_id'] ?? '0';
-		$insert_warranty['product_id'] = $warranty_data['product_id'] ?? '0';
+		$insert_warranty['product_id'] = '90';
 		$insert_warranty['start_time'] = $warranty_data['start_time'] ?? '';
 		$insert_warranty['end_time'] = $warranty_data['end_time'] ?? '';
-		$insert_warranty['ins_company_id'] = $warranty_data['company_id'] ?? '0';
+		$insert_warranty['ins_company_id'] = '55';
 		$insert_warranty['count'] = '1';//购买份数
-		$insert_warranty['pay_category_id'] = '';//缴别ID
+		$insert_warranty['pay_category_id'] = '38';//缴别ID
 		$insert_warranty['integral'] = '';//积分
 		$insert_warranty['express_no'] = '';//快递单号
 		$insert_warranty['express_company_name'] = '';//快递公司名称
@@ -135,7 +135,7 @@ class AddWarrranty extends Command
 		$insert_warranty['express_county_code'] = '';//地区
 		$insert_warranty['express_email'] = '';//邮箱
 		$insert_warranty['delivery_type'] = '';//快递方式，0-自取，1-快递',
-		$insert_warranty['order_time'] = '';//保单下单时间
+		$insert_warranty['order_time'] =  $warranty_data['create'];//保单下单时间
 		$insert_warranty['is_settlement'] = $warranty_data['is_settlement'] ?? '0';//佣金 0表示未结算，1表示已结算
 		$insert_warranty['warranty_url'] = $warranty_data['warranty_url'] ?? '';
 		$insert_warranty['warranty_from'] = $warranty_data['warranty_from'] ?? '';//不为空,保单来源 1 自购 2线上成交 3线下成交 4导入
@@ -144,8 +144,8 @@ class AddWarrranty extends Command
 		$insert_warranty['resp_code'] = '';//投保回执CODE
 		$insert_warranty['resp_msg'] = $warranty_data['resp_insure_msg'] ?? $warranty_data['resp_pay_msg'];//投保回执信息
 		$insert_warranty['state'] = $warranty_data['state'] ?? '';//删除标识 0删除 1可用
-		$insert_warranty['created_at'] = $this->date;
-		$insert_warranty['updated_at'] = $this->date;
+		$insert_warranty['created_at'] = $warranty_data['create'];
+		$insert_warranty['updated_at'] = $warranty_data['update'];
 		$repeat_res = OnlineCustWarranty::where('warranty_uuid', $warranty_data['warranty_uuid'])->select('id')->first();
 		if (empty($repeat_res)) {
 			DB::beginTransaction();
@@ -153,7 +153,7 @@ class AddWarrranty extends Command
 				$warranty_id = OnlineCustWarranty::insertGetId($insert_warranty);
 				$insert_warranty_cost = [];
 				$insert_warranty_cost['warranty_uuid'] = $warranty_data['warranty_uuid'];//不为空
-				$insert_warranty_cost['pay_time'] = $warranty_data['pay_time'];//应支付时间
+				$insert_warranty_cost['pay_time'] = $warranty_data['start_time'];//应支付时间
 				$insert_warranty_cost['phase'] = '1';//分期：第几期
 				$insert_warranty_cost['premium'] = $warranty_data['premium'];//保单价格
 				$insert_warranty_cost['tax_money'] = '0';//税费
@@ -163,8 +163,8 @@ class AddWarrranty extends Command
 				$insert_warranty_cost['pay_status'] = $warranty_data['pay_status'];//支付状态
 				$insert_warranty_cost['is_settlement'] = '0';//结算状态 0-未结算，1-已结算'
 				$insert_warranty_cost['bill_uuid'] = '';//结算单uuid
-				$insert_warranty_cost['created_at'] = $this->date;
-				$insert_warranty_cost['updated_at'] = $this->date;
+				$insert_warranty_cost['created_at'] = $warranty_data['create'];
+				$insert_warranty_cost['updated_at'] = $warranty_data['update'];
 				$repeat_res = OnlineCustWarrantyCost::where('warranty_uuid', $person_data['warranty_uuid'])->select('id')->first();
 				if (empty($repeat_res)) {
 					$warranty_cost_id = OnlineCustWarrantyCost::insertGetId($insert_warranty_cost);

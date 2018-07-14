@@ -27,9 +27,9 @@ class WarrantyController
 	public function warrantyIndex()
 	{
 		set_time_limit(0);
-		$warranty_common = OldCustWarranty::select('id','warranty_uuid','pro_policy_no','warranty_code','business_no','comb_product','comb_warranty_code','company_id','user_id','user_type','agent_id','ditch_id','plan_id','product_id','start_time','end_time','ins_company_id','count','pay_time','pay_count','pay_way','by_stages_way','is_settlement','warranty_url','warranty_from','type','check_status','pay_status','warranty_status','resp_insure_msg','resp_pay_msg','state');
+		$warranty_common = OldCustWarranty::select('id','warranty_uuid','pro_policy_no','warranty_code','business_no','comb_product','comb_warranty_code','company_id','user_id','user_type','agent_id','ditch_id','plan_id','product_id','start_time','end_time','ins_company_id','count','pay_time','pay_count','pay_way','by_stages_way','is_settlement','warranty_url','warranty_from','type','check_status','pay_status','warranty_status','resp_insure_msg','resp_pay_msg','state',DB::raw('`created_at` AS `create`'),DB::raw('`updated_at` AS `update`'));
 		if (!Redis::exists('warranty_max_id') && !Redis::exists('warranty_data')) {
-			$warranty = $warranty_common->limit(10000)->get();
+			$warranty = $warranty_common->limit(1)->get();
 			if(!empty($warranty)){
 				$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 				Redis::set('warranty_max_id', $max_id);
@@ -63,13 +63,13 @@ class WarrantyController
 				Redis::rpush('warranty_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 1000; $i++) {
+		for ($i = 1; $i <= 1; $i++) {
 			$warranty_info = Redis::rpop('warranty_info');
 			$add_res = $this->addWarranty(json_decode($warranty_info, true));
 			dump($add_res);
 		}
 		if (Redis::lLen('warranty_info') <= 0) {
-			$warranty = $warranty_common->limit($max_id+1,10000)->get();
+			$warranty = $warranty_common->limit($max_id+1,1)->get();
 			$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_max_id', $max_id);
 			Redis::set('warranty_data', $warranty);
@@ -118,8 +118,8 @@ class WarrantyController
 		$insert_warranty['resp_code'] = '';//投保回执CODE
 		$insert_warranty['resp_msg'] = $warranty_data['resp_insure_msg'] ?? $warranty_data['resp_pay_msg'];//投保回执信息
 		$insert_warranty['state'] = $warranty_data['state'] ?? '';//删除标识 0删除 1可用
-		$insert_warranty['created_at'] = $this->date;
-		$insert_warranty['updated_at'] = $this->date;
+		$insert_warranty['created_at'] = $warranty_data['create'];
+		$insert_warranty['updated_at'] = $warranty_data['update'];
 		$repeat_res = OnlineCustWarranty::where('warranty_uuid', $warranty_data['warranty_uuid'])->select('id')->first();
 		if (empty($repeat_res)) {
 			DB::beginTransaction();

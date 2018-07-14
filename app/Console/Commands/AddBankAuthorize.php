@@ -50,7 +50,7 @@ class AddBankAuthorize extends Command
 	public function handle()
 	{
 		set_time_limit(0);
-		$contract_common = OldContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
+		$contract_common = OldContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code',DB::raw('`created_at` AS `create`'),DB::raw('`updated_at` AS `update`'));
 		if (!Redis::exists('contract_max_id') && !Redis::exists('contract_data')) {
 			$contract_data = $contract_common->limit(10000)->get();
 			if(!empty($contract_data)){
