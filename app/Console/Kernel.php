@@ -28,12 +28,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('addWarrrantyPerson')->everyMinute()->between('00:30', '03:59')->runInBackground();
-        $schedule->command('addWarrranty')->everyMinute()->between('03:30', '04:59')->runInBackground();
-        $schedule->command('addBankAuthorize')->everyMinute()->between('00:00', '06:00')->runInBackground();
-        $schedule->command('addBank')->everyMinute()->between('00:00', '06:00')->runInBackground();
-        $schedule->command('addPerson')->everyMinute()->between('00:30', '06:00')->runInBackground();
+        $schedule->command('addWarrrantyPerson')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addWarrranty')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addBankAuthorize')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addBank')->everyMinute()->between('00:00', '23:59')->runInBackground();
+        $schedule->command('addPerson')->everyMinute()->between('00:00', '23:59')->runInBackground();
 
+//		$schedule->command('addWarrrantyPerson')->everyMinute()->between('00:30', '03:59')->runInBackground();
+//		$schedule->command('addWarrranty')->everyMinute()->between('03:30', '04:59')->runInBackground();
+//		$schedule->command('addBankAuthorize')->everyMinute()->between('00:00', '06:00')->runInBackground();
+//		$schedule->command('addBank')->everyMinute()->between('00:00', '06:00')->runInBackground();
+//		$schedule->command('addPerson')->everyMinute()->between('00:30', '06:00')->runInBackground();
     }
 
     /**
