@@ -28,7 +28,7 @@ class PersonController
 		set_time_limit(0);
     	$person_common = OldPerson::select('id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status');
     	if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
-			$person = $person_common->limit(1000)->get();
+			$person = $person_common->limit(10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
@@ -51,12 +51,12 @@ class PersonController
 				Redis::rpush('person_info',json_encode($value));
 			}
 		}
-		for($i=1;$i<=100;$i++){
+		for($i=1;$i<=1000;$i++){
 			$person_info = Redis::rpop('person_info');
 			$addRes = $this->addData(json_decode($person_info,true));
 		}
 		if(Redis::lLen('person_info')<1){
-			$person =  $person_common->limit($max_id+1,1000)->get();
+			$person =  $person_common->limit($max_id+1,10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
