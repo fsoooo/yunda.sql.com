@@ -103,6 +103,7 @@ class AddWarrranty extends Command
 			return 'no account_uuid';
 		}
 		$insert_warranty = [];
+		$insert_warranty['warranty_uuid'] = $warranty_data['warranty_uuid'];//不为空
 		$insert_warranty['pre_policy_no'] = $warranty_data['pro_policy_no'] ?? '';
 		$insert_warranty['warranty_code'] = $warranty_data['warranty_code'] ?? '';
 		$insert_warranty['comb_product'] = $warranty_data['comb_product'] ?? '0';//'组合产品  0 不是  1是',
@@ -147,7 +148,7 @@ class AddWarrranty extends Command
 			try {
 				$warranty_id = OnlineCustWarranty::insertGetId($insert_warranty);
 				$insert_warranty_cost = [];
-				$insert_warranty_cost['warranty_uuid'] = $person_data['warranty_uuid'];//不为空
+				$insert_warranty_cost['warranty_uuid'] = $warranty_data['warranty_uuid'];//不为空
 				$insert_warranty_cost['pay_time'] = $warranty_data['pay_time'];//应支付时间
 				$insert_warranty_cost['phase'] = '1';//分期：第几期
 				$insert_warranty_cost['premium'] = '0';//保单价格
