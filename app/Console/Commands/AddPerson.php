@@ -74,7 +74,7 @@ class AddPerson extends Command
 			$addRes = $this->addData(json_decode($person_info,true));
 		}
 		if(Redis::lLen('person_info')<1){
-			$person =  $person_common->limit($max_id+1,10000)->get();
+			$person =  $person_common->where('id','>',$max_id)->limit(10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);

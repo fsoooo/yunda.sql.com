@@ -82,7 +82,8 @@ class AddWarrrantyPerson extends Command
 		}
 		$count = Redis::lLen('warranty_person_info');
 		if ($count <= 0) {
-			$warranty_person_data = $warranty_person_commom->limit($warranty_person_max_id+1, 10000)->get();
+			//->where('id','>',$max_id)->limit(10000)->get();
+			$warranty_person_data = $warranty_person_commom->where('id','>',$warranty_person_max_id)->limit(10000)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);

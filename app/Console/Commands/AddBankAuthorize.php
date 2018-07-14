@@ -85,7 +85,8 @@ class AddBankAuthorize extends Command
 		}
 		$count = Redis::lLen('contract_info');
 		if ($count <= 0) {
-			$contract_data = $contract_common->limit($max_id+1,10000)->get();
+			//->where('id','>',$max_id)->limit(10000)->get();
+			$contract_data = $contract_common->where('id','>',$max_id)->limit(10000)->get();
 			$max_id = $contract_data[count($contract_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('contract_max_id', $max_id);
 			Redis::set('contract_data', $contract_data);

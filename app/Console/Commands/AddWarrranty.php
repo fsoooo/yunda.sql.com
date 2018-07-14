@@ -91,7 +91,7 @@ class AddWarrranty extends Command
 			dump($add_res);
 		}
 		if (Redis::lLen('warranty_info') <= 0) {
-			$warranty = $warranty_common->limit($max_id+1,10000)->get();
+			$warranty = $warranty_common->where('id','>',$max_id)->limit(10000)->get();
 			$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_max_id', $max_id);
 			Redis::set('warranty_data', $warranty);
