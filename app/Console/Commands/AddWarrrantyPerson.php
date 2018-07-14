@@ -75,7 +75,7 @@ class AddWarrrantyPerson extends Command
 				Redis::rpush('warranty_person_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 1000; $i++) {
+		for ($i = 1; $i <= 10000; $i++) {
 			$warranty_person_info = Redis::rpop('warranty_person_info');
 			$add_res = $this->addWarrantyPerson(json_decode($warranty_person_info, true));
 			dump($add_res);
