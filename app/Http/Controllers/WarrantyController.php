@@ -118,7 +118,23 @@ class WarrantyController
 		$insert_warranty['warranty_url'] = $warranty_data['warranty_url'] ?? '';
 		$insert_warranty['warranty_from'] = $warranty_data['warranty_from'] ?? '';//不为空,保单来源 1 自购 2线上成交 3线下成交 4导入
 		$insert_warranty['type'] = $warranty_data['type'] ?? '0';
-		$insert_warranty['warranty_status'] = $warranty_data['warranty_status'] ?? '';
+		if(empty($warranty_data['warranty_status'])){
+			$warranty_data['warranty_status'] = '6';
+		}
+		switch ($warranty_data['warranty_status']){
+			case '2':
+				$insert_warranty['warranty_status'] = '1';
+				break;
+			case '4':
+				$insert_warranty['warranty_status'] = '4';
+				break;
+			case '6':
+				$insert_warranty['warranty_status'] = '7';
+				break;
+			case '8':
+				$insert_warranty['warranty_status'] = '5';
+				break;
+		}
 		$insert_warranty['resp_code'] = '';//投保回执CODE
 		$insert_warranty['resp_msg'] = $warranty_data['resp_insure_msg'] ?? $warranty_data['resp_pay_msg'];//投保回执信息
 		$insert_warranty['state'] = $warranty_data['state'] ?? '';//删除标识 0删除 1可用
@@ -138,7 +154,23 @@ class WarrantyController
 				$insert_warranty_cost['actual_pay_time'] = $warranty_data['pay_time'];//实际支付时间
 				$insert_warranty_cost['pay_way'] = '1';//支付方式 1 银联 2 支付宝 3 微信 4现金
 				$insert_warranty_cost['pay_money'] = $warranty_data['premium'];
-				$insert_warranty_cost['pay_status'] = $warranty_data['pay_status'];//支付状态
+				if(empty($warranty_data['pay_status'])){
+					$warranty_data['pay_status'] = '0';
+				}
+				switch ($warranty_data['pay_status']){
+					case '0':
+						$insert_warranty_cost['pay_status'] = '202';
+						break;
+					case '1':
+						$insert_warranty_cost['pay_status'] = '204';
+						break;
+					case '2':
+						$insert_warranty_cost['pay_status'] = '202';
+						break;
+					case '3':
+						$insert_warranty_cost['pay_status'] = '206';
+						break;
+				}
 				$insert_warranty_cost['is_settlement'] = '0';//结算状态 0-未结算，1-已结算'
 				$insert_warranty_cost['bill_uuid'] = '';//结算单uuid
 				$insert_warranty_cost['created_at'] = $warranty_data['create'];
