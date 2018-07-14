@@ -93,8 +93,12 @@ class AddWarrrantyPerson extends Command
 
 	public function addWarrantyPerson($warranty_person_data)
 	{
+		if(empty($warranty_person_data['warranty_uuid'])){
+			LogHelper::logs('no_account_uuid','addwarrantyperson','','add_warranty_person_error');
+			return 'no_account_uuid';
+		}
 		$insert_warranty_person = [];
-		$insert_warranty_person['warranty_uuid'] = $warranty_person_data['warranty_uuid']??'0';//不为空
+		$insert_warranty_person['warranty_uuid'] = $warranty_person_data['warranty_uuid'];//不为空
 		$insert_warranty_person['type'] = $warranty_person_data['type']??"1";//人员类型: 1投保人 2被保人 3受益人
 		$insert_warranty_person['relation_name'] = $warranty_person_data['relation_name'];
 		$insert_warranty_person['out_order_no'] = $warranty_person_data['out_order_no'];

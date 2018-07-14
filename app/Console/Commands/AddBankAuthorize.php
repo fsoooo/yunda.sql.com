@@ -99,8 +99,15 @@ class AddBankAuthorize extends Command
 			->with('personRefer')
 			->select('id')
 			->first();
+		if(empty($person_data)){
+			LogHelper::logs('no account_uuid','addbank','','add_bank_authorize_error');
+			return 'no account_uuid';
+		}else if(isset($person_data['personRefer'])&&empty($person_data['personRefer'])){
+			LogHelper::logs('no account_uuid','addbank','','add_bank_authorize_error');
+			return 'no account_uuid';
+		}
 		$authorize_data = [];
-		$authorize_data['account_uuid'] = $person_data['personRefer']['account_uuid']??"0";
+		$authorize_data['account_uuid'] = $person_data['personRefer']['account_uuid'];
 		$authorize_data['bank_id'] = '';
 		$authorize_data['request_serial'] =  $contract_info['request_serial'];
 		$authorize_data['contract_expired_time'] =  $contract_info['contract_expired_time'];

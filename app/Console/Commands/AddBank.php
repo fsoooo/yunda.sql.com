@@ -99,8 +99,12 @@ class AddBank extends Command
 		$person_data = OnlinePersonRefer::where('out_person_id', $bank_info['cust_id'])
 			->select('account_uuid', 'manager_uuid')
 			->first();
+		if(empty($person_data)){
+			LogHelper::logs('no account_uuid','addbank','','add_bank_error');
+			return 'no account_uuid';
+		}
 		$bank_data = [];
-		$bank_data['account_uuid'] = $person_data['account_uuid']??"0";
+		$bank_data['account_uuid'] = $person_data['account_uuid'];
 		$bank_data['bank_name'] = $bank_info['bank'];
 		$bank_data['bank_city'] = $bank_info['bank_city'];
 		$bank_data['bank_code'] = $bank_info['bank_code'];
@@ -118,7 +122,7 @@ class AddBank extends Command
 			try {
 				$bank_id = OnlineBank::insertGetId($bank_data);
 				$authorize_data = [];
-				$authorize_data['account_uuid'] = $person_data['account_uuid']??"0";
+				$authorize_data['account_uuid'] = $person_data['account_uuid'];
 				$authorize_data['bank_id'] = $bank_id;
 				$authorize_data['request_serial'] = '';
 				$authorize_data['contract_expired_time'] = '';

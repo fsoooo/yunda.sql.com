@@ -75,13 +75,6 @@ class AddWarrranty extends Command
 		}
 		if (!empty($warranty) && Redis::lLen('warranty_info') == 0) {
 			foreach ($warranty as $value) {
-				$person_data = OnlinePersonRefer::where('out_person_id', $value['user_id'])
-					->select('account_uuid', 'manager_uuid')
-					->first();
-				if (!empty($person_data)) {
-					$value['account_uuid'] = $person_data['account_uuid'];
-					$value['manager_uuid'] = $person_data['manager_uuid'];
-				}
 				Redis::rpush('warranty_info', json_encode($value));
 			}
 		}
@@ -102,16 +95,22 @@ class AddWarrranty extends Command
 
 	public function addWarranty($warranty_data)
 	{
+		$person_data = OnlinePersonRefer::where('out_person_id', $warranty_data['user_id'])
+			->select('account_uuid', 'manager_uuid')
+			->first();
+		if(empty($person_data)){
+			LogHelper::logs('no account_uuid','addwarranty','','add_warranty_error');
+			return 'no account_uuid';
+		}
 		$insert_warranty = [];
-		$insert_warranty['warranty_uuid'] = $warranty_data['warranty_uuid'];//不为空
 		$insert_warranty['pre_policy_no'] = $warranty_data['pro_policy_no'] ?? '';
 		$insert_warranty['warranty_code'] = $warranty_data['warranty_code'] ?? '';
 		$insert_warranty['comb_product'] = $warranty_data['comb_product'] ?? '0';//'组合产品  0 不是  1是',
 		$insert_warranty['comb_warranty_code'] = $warranty_data['comb_warranty_code'] ?? '';//组合保单号
 		$insert_warranty['business_no'] = $warranty_data['business_no'] ?? '';//业务识别号
 
-		$insert_warranty['manager_uuid'] = $warranty_data['manager_uuid'] ?? '';
-		$insert_warranty['account_uuid'] = $warranty_data['account_uuid'] ?? '';
+		$insert_warranty['manager_uuid'] = $person_data['manager_uuid'] ?? '';
+		$insert_warranty['account_uuid'] = $person_data['account_uuid'] ?? '';
 
 		$insert_warranty['agent_id'] = $warranty_data['agent_id'] ?? '';
 		$insert_warranty['channel_id'] = $warranty_data['ditch_id'] ?? '0';
@@ -148,7 +147,7 @@ class AddWarrranty extends Command
 			try {
 				$warranty_id = OnlineCustWarranty::insertGetId($insert_warranty);
 				$insert_warranty_cost = [];
-				$insert_warranty_cost['warranty_uuid'] = $warranty_data['warranty_uuid'];//不为空
+				$insert_warranty_cost['warranty_uuid'] = $person_data['warranty_uuid'];//不为空
 				$insert_warranty_cost['pay_time'] = $warranty_data['pay_time'];//应支付时间
 				$insert_warranty_cost['phase'] = '1';//分期：第几期
 				$insert_warranty_cost['premium'] = '0';//保单价格
@@ -161,7 +160,7 @@ class AddWarrranty extends Command
 				$insert_warranty_cost['bill_uuid'] = '';//结算单uuid
 				$insert_warranty_cost['created_at'] = $this->date;
 				$insert_warranty_cost['updated_at'] = $this->date;
-				$repeat_res = OnlineCustWarrantyCost::where('warranty_uuid', $warranty_data['warranty_uuid'])->select('id')->first();
+				$repeat_res = OnlineCustWarrantyCost::where('warranty_uuid', $person_data['warranty_uuid'])->select('id')->first();
 				if (empty($repeat_res)) {
 					$warranty_cost_id = OnlineCustWarrantyCost::insertGetId($insert_warranty_cost);
 				} else {
