@@ -175,7 +175,7 @@ class AddPerson extends Command
 				return '失败';
 			}
 		}else{
-			LogHelper::logs('person not empty','addPerson','','add_person_error');
+			LogHelper::logs('person not empty'.$insert_data['phone'],'addPerson','','add_person_error');
 			return 'person not empty';
 		}
 	}
