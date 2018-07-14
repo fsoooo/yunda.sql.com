@@ -84,7 +84,11 @@ class AddWarrrantyPerson extends Command
 		if ($count <= 0) {
 			//->where('id','>',$max_id)->limit(10000)->get();
 			$warranty_person_data = $warranty_person_commom->where('id','>',$warranty_person_max_id)->limit(10000)->get();
-			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
+			if(count($warranty_person_data)<10000){
+				$warranty_person_max_id = 0;//重置
+			}else{
+				$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
+			}
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);
 		}
@@ -100,7 +104,7 @@ class AddWarrrantyPerson extends Command
 		$insert_warranty_person = [];
 		$insert_warranty_person['warranty_uuid'] = $warranty_person_data['warranty_uuid'];//不为空
 		$insert_warranty_person['type'] = $warranty_person_data['type']??"1";//人员类型: 1投保人 2被保人 3受益人
-		$insert_warranty_person['relation_name'] = $warranty_person_data['relation_name'];
+		$insert_warranty_person['relation_name'] = '1';
 		$insert_warranty_person['out_order_no'] = $warranty_person_data['out_order_no'];
 		$insert_warranty_person['name'] = $warranty_person_data['name'];
 		$insert_warranty_person['card_type'] = $warranty_person_data['card_type'] ?? '1';

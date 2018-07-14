@@ -88,7 +88,11 @@ class AddBank extends Command
 		$count = Redis::lLen('bank_info');
 		if ($count <= 0) {
 			$bank_data = $bank_common->where('id','>',$max_id)->limit(10000)->get();
-			$max_id = $bank_data[count($bank_data) - 1]['id'];//把最大的id存在redis里
+			if(count($bank_data)<10000){
+				$max_id = 0;//重置
+			}else{
+				$max_id = $bank_data[count($bank_data) - 1]['id'];//把最大的id存在redis里
+			}
 			Redis::set('bank_max_id', $max_id);
 			Redis::set('bank_data', $bank_data);
 		}

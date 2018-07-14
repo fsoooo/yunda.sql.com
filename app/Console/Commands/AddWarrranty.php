@@ -85,7 +85,11 @@ class AddWarrranty extends Command
 		}
 		if (Redis::lLen('warranty_info') <= 0) {
 			$warranty = $warranty_common->where('id','>',$max_id)->limit(10000)->get();
-			$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
+			if(count($warranty)<10000){
+				$max_id = 0;//重置
+			}else{
+				$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
+			}
 			Redis::set('warranty_max_id', $max_id);
 			Redis::set('warranty_data', $warranty);
 		}
@@ -151,12 +155,12 @@ class AddWarrranty extends Command
 				$insert_warranty_cost['warranty_uuid'] = $warranty_data['warranty_uuid'];//不为空
 				$insert_warranty_cost['pay_time'] = $warranty_data['pay_time'];//应支付时间
 				$insert_warranty_cost['phase'] = '1';//分期：第几期
-				$insert_warranty_cost['premium'] = '0';//保单价格
+				$insert_warranty_cost['premium'] = $warranty_data['premium'];//保单价格
 				$insert_warranty_cost['tax_money'] = '0';//税费
 				$insert_warranty_cost['actual_pay_time'] = $warranty_data['pay_time'];//实际支付时间
 				$insert_warranty_cost['pay_way'] = '1';//支付方式 1 银联 2 支付宝 3 微信 4现金
-				$insert_warranty_cost['pay_money'] = '0';
-				$insert_warranty_cost['pay_status'] = '0';//支付状态
+				$insert_warranty_cost['pay_money'] = $warranty_data['premium'];
+				$insert_warranty_cost['pay_status'] = $warranty_data['pay_status'];//支付状态
 				$insert_warranty_cost['is_settlement'] = '0';//结算状态 0-未结算，1-已结算'
 				$insert_warranty_cost['bill_uuid'] = '';//结算单uuid
 				$insert_warranty_cost['created_at'] = $this->date;
