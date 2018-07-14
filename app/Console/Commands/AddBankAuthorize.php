@@ -78,7 +78,7 @@ class AddBankAuthorize extends Command
 				Redis::rpush('contract_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 10000; $i++) {
+		for ($i = 1; $i <= 1000; $i++) {
 			$contract_info = Redis::rpop('contract_info');
 			$add_res = $this->doAddBankAuthorize(json_decode($contract_info, true));
 			dump($add_res);

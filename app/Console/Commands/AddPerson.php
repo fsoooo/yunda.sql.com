@@ -69,7 +69,7 @@ class AddPerson extends Command
 				Redis::rpush('person_info',json_encode($value));
 			}
 		}
-		for($i=1;$i<=10000;$i++){
+		for($i=1;$i<=1000;$i++){
 			$person_info = Redis::rpop('person_info');
 			if(empty($person_info)){
 				LogHelper::logs('person_info is empty','addPerson','','add_person_error');
