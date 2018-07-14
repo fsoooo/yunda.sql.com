@@ -105,7 +105,7 @@ class AddPerson extends Command
 		$insert_data['state'] = '1';//0删除
 		$insert_data['created_at'] = $this->date;
 		$insert_data['updated_at'] = $this->date;
-		$repeat_res = OnlinePerson::where('cert_code',$insert_data['cert_code'])->select('id')->first();
+		$repeat_res = OnlinePerson::where('phone',$insert_data['phone'])->select('id')->first();
 		if(empty($repeat_res)){
 			DB::beginTransaction();
 			try{
