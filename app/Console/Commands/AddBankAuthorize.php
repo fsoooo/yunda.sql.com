@@ -3,6 +3,7 @@ namespace App\Console\Commands;
 
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
 use App\Models\OldPerson;
@@ -51,7 +52,7 @@ class AddBankAuthorize extends Command
 		set_time_limit(0);
 		$contract_common = OldContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
 		if (!Redis::exists('contract_max_id') && !Redis::exists('contract_data')) {
-			$contract_data = $contract_common->limit(1000)->get();
+			$contract_data = $contract_common->limit(10000)->get();
 			if(!empty($contract_data)){
 				$max_id = $contract_data[count($contract_data)-1]['id'];//把最大的id存在redis里
 				Redis::set('contract_max_id', $max_id);
@@ -77,14 +78,14 @@ class AddBankAuthorize extends Command
 				Redis::rpush('contract_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 200; $i++) {
+		for ($i = 1; $i <= 1000; $i++) {
 			$contract_info = Redis::rpop('contract_info');
 			$add_res = $this->doAddBankAuthorize(json_decode($contract_info, true));
 			dump($add_res);
 		}
 		$count = Redis::lLen('contract_info');
 		if ($count <= 0) {
-			$contract_data = $contract_common->limit($max_id+1,1)->get();
+			$contract_data = $contract_common->limit($max_id+1,10000)->get();
 			$max_id = $contract_data[count($contract_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('contract_max_id', $max_id);
 			Redis::set('contract_data', $contract_data);
@@ -118,6 +119,7 @@ class AddBankAuthorize extends Command
 			->first();
 		if(empty($repeat_res)){
 			OnlineBankAuthorize::insertGetId($authorize_data);
+			LogHelper::logs('插入成功','addBankAuthorize','','add_bankAuthorize_success');
 			return '插入结果';
 		}else{
 			DB::connection('online_mysql')->update('update 
@@ -141,6 +143,7 @@ class AddBankAuthorize extends Command
 //					'contract_code' => $authorize_data['contract_code'],
 //					'openid' => $authorize_data['openid']
 //				]);
+			LogHelper::logs('更新成功','updateBankAuthorize','','add_bankAuthorize_success');
 			return '更新结果';
 		}
 	}

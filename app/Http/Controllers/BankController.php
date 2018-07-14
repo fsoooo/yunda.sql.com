@@ -23,7 +23,8 @@ class BankController
 		$this->date = TimeStamp::getMillisecond();
 	}
 
-	public function bankIndex(){
+	public function bankIndex()
+	{
 		set_time_limit(0);
 		$bank_common = OldBank::select('id','cust_id','bank','bank_code','bank_city','phone');
 		if (!Redis::exists('bank_max_id') && !Redis::exists('bank_data')) {
@@ -127,7 +128,8 @@ class BankController
 		}
 	}
 
-	public function bankAuthorizeIndex(){
+	public function bankAuthorizeIndex()
+	{
 		set_time_limit(0);
 		$contract_common = OldContractInfo::select('id','request_serial','contract_expired_time','contract_id','change_type','contract_code','openid','channel_user_code');
 		if (!Redis::exists('contract_max_id') && !Redis::exists('contract_data')) {

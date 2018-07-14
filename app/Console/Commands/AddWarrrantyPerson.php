@@ -2,6 +2,7 @@
 namespace App\Console\Commands;
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlineCustWarrantyCost;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
@@ -50,7 +51,7 @@ class AddWarrrantyPerson extends Command
 		set_time_limit(0);
 		$warranty_person_commom = OldCustWarrantyPerson::select('id','warranty_uuid','out_order_no','type', 'relation_name', 'name', 'card_type', 'card_code', 'phone', 'occupation', 'birthday','sex', 'age','email', 'nationality', 'annual_income', 'height', 'weight', 'area', 'address', 'start_time', 'end_time');
 		if (!Redis::exists('warranty_person_max_id') && !Redis::exists('warranty_person_data')) {
-			$warranty_person_data = $warranty_person_commom->limit(2000)->get();
+			$warranty_person_data = $warranty_person_commom->limit(10000)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);
@@ -74,14 +75,14 @@ class AddWarrrantyPerson extends Command
 				Redis::rpush('warranty_person_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 200; $i++) {
+		for ($i = 1; $i <= 1000; $i++) {
 			$warranty_person_info = Redis::rpop('warranty_person_info');
 			$add_res = $this->addWarrantyPerson(json_decode($warranty_person_info, true));
 			dump($add_res);
 		}
 		$count = Redis::lLen('warranty_person_info');
 		if ($count <= 0) {
-			$warranty_person_data = $warranty_person_commom->limit($warranty_person_max_id+1, 20)->get();
+			$warranty_person_data = $warranty_person_commom->limit($warranty_person_max_id+1, 10000)->get();
 			$warranty_person_max_id = $warranty_person_data[count($warranty_person_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_person_max_id', $warranty_person_max_id);
 			Redis::set('warranty_person_data', $warranty_person_data);
@@ -121,9 +122,12 @@ class AddWarrrantyPerson extends Command
 			->first();
 		if (empty($repeat_res)) {
 			OnlineCustWarrantyPerson::insertGetId($insert_warranty_person);
+			LogHelper::logs('成功','addwarrantyperson','','add_warranty_person_success');
 			return '成功';
 		}else{
+			LogHelper::logs('warranty_person not empty','addwarrantyperson','','add_warranty_person_error');
 			return 'warranty_person not empty';
 		}
 	}
+
 }

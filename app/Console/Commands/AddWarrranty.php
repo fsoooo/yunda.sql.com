@@ -2,6 +2,7 @@
 namespace App\Console\Commands;
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlineCustWarrantyCost;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
@@ -50,7 +51,7 @@ class AddWarrranty extends Command
 		set_time_limit(0);
 		$warranty_common = OldCustWarranty::select('id','warranty_uuid','pro_policy_no','warranty_code','business_no','comb_product','comb_warranty_code','company_id','user_id','user_type','agent_id','ditch_id','plan_id','product_id','start_time','end_time','ins_company_id','count','pay_time','pay_count','pay_way','by_stages_way','is_settlement','warranty_url','warranty_from','type','check_status','pay_status','warranty_status','resp_insure_msg','resp_pay_msg','state');
 		if (!Redis::exists('warranty_max_id') && !Redis::exists('warranty_data')) {
-			$warranty = $warranty_common->limit(2000)->get();
+			$warranty = $warranty_common->limit(10000)->get();
 			if(!empty($warranty)){
 				$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 				Redis::set('warranty_max_id', $max_id);
@@ -84,13 +85,13 @@ class AddWarrranty extends Command
 				Redis::rpush('warranty_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 200; $i++) {
+		for ($i = 1; $i <= 1000; $i++) {
 			$warranty_info = Redis::rpop('warranty_info');
 			$add_res = $this->addWarranty(json_decode($warranty_info, true));
 			dump($add_res);
 		}
 		if (Redis::lLen('warranty_info') <= 0) {
-			$warranty = $warranty_common->limit($max_id+1,100)->get();
+			$warranty = $warranty_common->limit($max_id+1,10000)->get();
 			$max_id = $warranty[count($warranty) - 1]['id'];//把最大的id存在redis里
 			Redis::set('warranty_max_id', $max_id);
 			Redis::set('warranty_data', $warranty);
@@ -168,16 +169,20 @@ class AddWarrranty extends Command
 				}
 				if ($warranty_id && $warranty_cost_id) {
 					DB::commit();
+					LogHelper::logs('插入成功','addwarranty','','add_warranty_success');
 					return '成功';
 				} else {
 					DB::rollBack();
+					LogHelper::logs('数据插入失败','addwarranty','','add_warranty_error');
 					return '数据插入失败';
 				}
 			} catch (\Exception $e) {
 				DB::rollBack();
+				LogHelper::logs('sql执行失败','addwarranty','','add_warranty_error');
 				return 'sql执行失败';
 			}
 		}else{
+			LogHelper::logs('warranty not empty','addwarranty','','add_warranty_error');
 			return 'warranty not empty';
 		}
 	}

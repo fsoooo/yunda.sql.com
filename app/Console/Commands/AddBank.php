@@ -3,6 +3,7 @@ namespace App\Console\Commands;
 
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
 use App\Models\OldPerson;
@@ -51,7 +52,7 @@ class AddBank extends Command
 		set_time_limit(0);
 		$bank_common = OldBank::select('id','cust_id','bank','bank_code','bank_city','phone');
 		if (!Redis::exists('bank_max_id') && !Redis::exists('bank_data')) {
-			$bank_data = $bank_common->limit(1000)->get();
+			$bank_data = $bank_common->limit(10000)->get();
 			if(!empty($bank_data)){
 				$max_id = $bank_data[count($bank_data) - 1]['id'];//把最大的id存在redis里
 				Redis::set('bank_max_id', $max_id);
@@ -79,14 +80,14 @@ class AddBank extends Command
 				Redis::rpush('bank_info', json_encode($value));
 			}
 		}
-		for ($i = 1; $i <= 200; $i++) {
+		for ($i = 1; $i <= 1000; $i++) {
 			$bank_info = Redis::rpop('bank_info');
 			$add_res = $this->doAddBank(json_decode($bank_info, true));
 			dump($add_res);
 		}
 		$count = Redis::lLen('bank_info');
 		if ($count <= 0) {
-			$bank_data = $bank_common->limit($max_id+1,1000)->get();
+			$bank_data = $bank_common->limit($max_id+1,10000)->get();
 			$max_id = $bank_data[count($bank_data) - 1]['id'];//把最大的id存在redis里
 			Redis::set('bank_max_id', $max_id);
 			Redis::set('bank_data', $bank_data);
@@ -134,20 +135,19 @@ class AddBank extends Command
 				if(empty($repeat_res)){
 					$bank_authorize_id = OnlineBankAuthorize::insertGetId($authorize_data);
 				}else{
+					LogHelper::logs('bank_authorize not empty','addBank','','add_bank_error');
 					return 'bank_authorize not empty';
 				}
-				if ($bank_id && $bank_authorize_id) {
-					DB::commit();
-					return '成功';
-				} else {
-					DB::rollBack();
-					return '数据插入失败';
-				}
+				DB::commit();
+				LogHelper::logs('成功','addBank','','add_bank_success');
+				return '成功';
 			} catch (\Exception $e) {
 				DB::rollBack();
+				LogHelper::logs('bank_authorize not empty','addBank','','add_bank_error');
 				return 'sql执行失败';
 			}
 		}else{
+			LogHelper::logs('bank_authorize not empty','addBank','','add_bank_error');
 			return 'bank not empty';
 		}
 	}

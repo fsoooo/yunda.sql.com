@@ -2,6 +2,7 @@
 namespace App\Console\Commands;
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
 use App\Models\OldPerson;
@@ -45,7 +46,7 @@ class AddPerson extends Command
 		set_time_limit(0);
 		$person_common = OldPerson::select('id','name', 'papers_type', 'papers_code', 'papers_start', 'papers_end', 'sex', 'birthday', 'address', 'address_detail', 'phone', 'email', 'postcode', 'cust_type', 'authentication', 'up_url', 'down_url', 'person_url', 'head', 'company_id', 'del', 'status');
 		if(!Redis::exists('person_max_id')&&!Redis::exists('person_data')){
-			$person = $person_common->limit(1000)->get();
+			$person = $person_common->limit(10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
@@ -68,13 +69,12 @@ class AddPerson extends Command
 				Redis::rpush('person_info',json_encode($value));
 			}
 		}
-		for($i=1;$i<=200;$i++){
+		for($i=1;$i<=1000;$i++){
 			$person_info = Redis::rpop('person_info');
 			$addRes = $this->addData(json_decode($person_info,true));
-			dump($addRes);
 		}
 		if(Redis::lLen('person_info')<1){
-			$person =  $person_common->limit($max_id+1,1000)->get();
+			$person =  $person_common->limit($max_id+1,10000)->get();
 			$max_id = $person[count($person)-1]['id'];//把最大的id存在redis里
 			Redis::set('person_max_id',$max_id);
 			Redis::set('person_data',$person);
@@ -110,7 +110,7 @@ class AddPerson extends Command
 			DB::beginTransaction();
 			try{
 				$person_id = OnlinePerson::insertGetId($insert_data);
-				$account_uuid = '154000000'.$data['id'];
+				$account_uuid = 154000000+$data['id'];
 				if($person_id>0){
 					$insert_data_account = [];
 					$insert_data_account['account_uuid'] =$account_uuid.'';
@@ -144,30 +144,38 @@ class AddPerson extends Command
 								$add = OnlinePersonRefer::insertGetId($insert_data_personrefer);
 								if($add>0){
 									DB::commit();
+									LogHelper::logs('插入成功','addPerson','','add_person_success');
 									return '成功';
 								}else{
 									DB::rollBack();
+									LogHelper::logs('插入失败','addPerson','','add_person_error');
 									return '失败';
 								}
 							}else{
+								LogHelper::logs('person_refer not empty','addPerson','','add_person_error');
 								return 'person_refer not empty';
 							}
 						}else{
 							DB::rollBack();
+							LogHelper::logs('插入失败','addPerson','','add_person_error');
 							return '失败';
 						}
 					}else{
+						LogHelper::logs('account not empty','addPerson','','add_person_error');
 						return 'account not empty';
 					}
 				}else{
 					DB::rollBack();
+					LogHelper::logs('插入失败','addPerson','','add_person_error');
 					return '失败';
 				}
 			}catch (\Exception $e){
 				DB::rollBack();
+				LogHelper::logs('插入失败','addPerson','','add_person_error');
 				return '失败';
 			}
 		}else{
+			LogHelper::logs('person not empty','addPerson','','add_person_error');
 			return 'person not empty';
 		}
 	}
