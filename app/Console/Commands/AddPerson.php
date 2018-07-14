@@ -71,6 +71,10 @@ class AddPerson extends Command
 		}
 		for($i=1;$i<=10000;$i++){
 			$person_info = Redis::rpop('person_info');
+			if(empty($person_info)){
+				LogHelper::logs('person_info is empty','addPerson','','add_person_error');
+				return 'person_info is empty';
+			}
 			$addRes = $this->addData(json_decode($person_info,true));
 		}
 		if(Redis::lLen('person_info')<1){
@@ -84,6 +88,10 @@ class AddPerson extends Command
 	}
 
 	public function addData($data){
+    	if(empty($data)){
+			LogHelper::logs('person_info is empty','addPerson','','add_person_error');
+			return 'person_info is empty';
+		}
 		$insert_data = [];
 		$insert_data['name'] = $data['name'];
 		$insert_data['head'] = $data['head'];
