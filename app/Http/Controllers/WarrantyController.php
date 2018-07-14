@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlineCustWarrantyCost;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
@@ -146,16 +147,20 @@ class WarrantyController
 				}
 				if ($warranty_id && $warranty_cost_id) {
 					DB::commit();
+					LogHelper::logs('插入成功','addwarranty','','add_warranty_success');
 					return '成功';
 				} else {
 					DB::rollBack();
+					LogHelper::logs('数据插入失败','addwarranty','','add_warranty_error');
 					return '数据插入失败';
 				}
 			} catch (\Exception $e) {
 				DB::rollBack();
+				LogHelper::logs('sql执行失败','addwarranty','','add_warranty_error');
 				return 'sql执行失败';
 			}
 		}else{
+			LogHelper::logs('warranty not empty','addwarranty','','add_warranty_error');
 			return 'warranty not empty';
 		}
 	}
@@ -236,8 +241,10 @@ class WarrantyController
 			->first();
 		if (empty($repeat_res)) {
 			OnlineCustWarrantyPerson::insertGetId($insert_warranty_person);
+			LogHelper::logs('成功','addwarrantyperson','','add_warranty_person_success');
 			return '成功';
 		}else{
+			LogHelper::logs('warranty_person not empty','addwarrantyperson','','add_warranty_person_error');
 			return 'warranty_person not empty';
 		}
 	}

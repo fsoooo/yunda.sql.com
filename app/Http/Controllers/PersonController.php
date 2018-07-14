@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
 use App\Models\OldPerson;
@@ -19,6 +20,7 @@ class PersonController
 	public function __construct()
 	{
 		$this->date = TimeStamp::getMillisecond();
+		$this->log = new LogHelper();
 	}
 
     public function index()
@@ -52,7 +54,6 @@ class PersonController
 		for($i=1;$i<=100;$i++){
 			$person_info = Redis::rpop('person_info');
 			$addRes = $this->addData(json_decode($person_info,true));
-			dump($addRes);
 		}
 		if(Redis::lLen('person_info')<1){
 			$person =  $person_common->limit($max_id+1,1000)->get();
@@ -125,30 +126,38 @@ class PersonController
 								$add = OnlinePersonRefer::insertGetId($insert_data_personrefer);
 								if($add>0){
 									DB::commit();
+									LogHelper::logs('插入成功','addPerson','','add_person_success');
 									return '成功';
 								}else{
 									DB::rollBack();
+									LogHelper::logs('插入失败','addPerson','','add_person_error');
 									return '失败';
 								}
 							}else{
+								LogHelper::logs('person_refer not empty','addPerson','','add_person_error');
 								return 'person_refer not empty';
 							}
 						}else{
 							DB::rollBack();
+							LogHelper::logs('插入失败','addPerson','','add_person_error');
 							return '失败';
 						}
 					}else{
+						LogHelper::logs('account not empty','addPerson','','add_person_error');
 						return 'account not empty';
 					}
 				}else{
 					DB::rollBack();
+					LogHelper::logs('插入失败','addPerson','','add_person_error');
 					return '失败';
 				}
 			}catch (\Exception $e){
 				DB::rollBack();
+				LogHelper::logs('插入失败','addPerson','','add_person_error');
 				return '失败';
 			}
 		}else{
+			LogHelper::logs('person not empty','addPerson','','add_person_error');
 			return 'person not empty';
 		}
 	}

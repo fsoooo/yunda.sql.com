@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper\TimeStamp;
+use App\Helper\LogHelper;
 use App\Models\OnlinePersonRefer;
 use App\Models\OnlinePerson;
 use App\Models\OldPerson;
@@ -109,20 +110,19 @@ class BankController
 				if(empty($repeat_res)){
 					$bank_authorize_id = OnlineBankAuthorize::insertGetId($authorize_data);
 				}else{
+					LogHelper::logs('bank_authorize not empty','addBank','','add_bank_error');
 					return 'bank_authorize not empty';
 				}
-				if ($bank_id && $bank_authorize_id) {
-					DB::commit();
-					return '成功';
-				} else {
-					DB::rollBack();
-					return '数据插入失败';
-				}
+				DB::commit();
+				LogHelper::logs('成功','addBank','','add_bank_success');
+				return '成功';
 			} catch (\Exception $e) {
 				DB::rollBack();
+				LogHelper::logs('bank_authorize not empty','addBank','','add_bank_error');
 				return 'sql执行失败';
 			}
 		}else{
+			LogHelper::logs('bank_authorize not empty','addBank','','add_bank_error');
 			return 'bank not empty';
 		}
 	}
@@ -198,6 +198,7 @@ class BankController
 			->first();
 		if(empty($repeat_res)){
 			OnlineBankAuthorize::insertGetId($authorize_data);
+			LogHelper::logs('插入成功','addBankAuthorize','','add_bankAuthorize_success');
 			return '插入结果';
 		}else{
 			DB::connection('online_mysql')->update('update 
@@ -221,6 +222,7 @@ class BankController
 //					'contract_code' => $authorize_data['contract_code'],
 //					'openid' => $authorize_data['openid']
 //				]);
+			LogHelper::logs('更新成功','updateBankAuthorize','','add_bankAuthorize_success');
 			return '更新结果';
 		}
 	}
